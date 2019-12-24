@@ -48,7 +48,7 @@ class Game extends React.Component {
     constructor(props) {
         super(props);
 
-        const sock = new SockJS('http://192.168.36.35:5000/echo')
+        const sock = new SockJS('http://192.168.36.35:9999/echo')
 
         this.state = {
             xIsNext: true,
