@@ -39,20 +39,17 @@ const connection = []
 
 let curSquares = new Array(9).fill(null)
 let xIsNext = true
-const players = new Array(2).fill(null)
+const players = new Array(6).fill(null)
+
+
 echo.on('connection', function (conn) {
     let currentUser = {
         id: Math.random(),
         name: ''
     }
-    
     setInterval(() => {
         const payload = {
-            users: USER_LIST,
-            squares: curSquares,
-            turn: xIsNext ? 0 : 1,
-            sign: xIsNext ? 'X' : 'O',
-            players: players
+            users: USER_LIST
         }
         conn.write(JSON.stringify(payload))
     }, 100)
@@ -77,15 +74,12 @@ echo.on('connection', function (conn) {
         }
 
 
-        const squares = curSquares
         if(mess.clickOnDeck >= 0) {
-            squares[mess.clickOnDeck] = xIsNext ? 'X' : 'O'
-            xIsNext = !xIsNext
-            curSquares = squares
+            console.log('1')
         }
 
         if(mess.reload) {
-            curSquares = new Array(9).fill(null)
+            console.log('2')
         }        
     });
 
@@ -98,6 +92,31 @@ echo.on('connection', function (conn) {
 });
 const server = http.createServer(app);
 echo.installHandlers(server, { prefix: '/echo' });
+
+const suit = ["0", "1", "2", "3"]
+const rank = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+const shuffle = arr => {
+	var j, temp;
+	for(var i = arr.length - 1; i > 0; i--){
+		j = Math.floor(Math.random()*(i + 1));
+		temp = arr[j];
+		arr[j] = arr[i];
+		arr[i] = temp;
+	}
+	return arr;
+}
+const createDeck = (suit, rank) =>{
+    const temp = []
+    for(const el of suit) {
+        for(const el1 of rank) {
+            temp.push({
+                suit: el,
+                rank: el1
+            })
+        }
+    }
+    return temp
+}
 
 //
 server.listen(port, '0.0.0.0', () => {

@@ -7,6 +7,7 @@ import Login from './components/Login'
 import Register from './components/Register'
 import Profile from './components/Profile'
 import Game from './components/Game'
+import Poker from './components/Poker'
 
 
 
@@ -22,6 +23,7 @@ function App() {
           <Route exact path="/login" component={Login} />
           <Route exact path="/profile" component={Profile} />
           <Route exact path="/game" component={Game} />
+          <Route exact path="/poker" component={Poker} />
         </div>
       </div>
     </Router>

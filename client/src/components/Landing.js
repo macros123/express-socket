@@ -5,9 +5,14 @@ class Landing extends Component {
     
     render() {
         const gameLink = (
-            <Link to='/game' className="game-link">
-                Play
-            </Link>
+            <ul>
+                <li><Link to='/game' className="game-link">
+                Play XO
+            </Link></li>
+            <li><Link to='/poker' className="game-link">
+                Play Peker
+            </Link></li>
+            </ul>
         )
         
         const welcomeMessage = (
