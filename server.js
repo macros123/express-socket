@@ -32,15 +32,40 @@ const Users = require('./routes/Users')
 app.use('/users', Users)
 
 
+app.get('/profile', (req, res) => {
+    const decoded = jwt.verify(req.headers['authorization'], process.env.SECRET_KEY)
+    User.findOne({
+        _id: decoded._id
+    })
+    .then(user => {
+        if(user) {
+           res.json(user) 
+        } else {
+            res.send("User does not exist")
+        }
+    })
+    .catch(err => {
+        res.send('error'+ err)
+    })
+})
+
+
 
 // userList
 const USER_LIST = []
 const connection = []
 
-let curSquares = new Array(9).fill(null)
-let xIsNext = true
-const players = new Array(6).fill(null)
+const players = new Array(6).fill({
+    isEmpty: true,
+    name: '',
+    money: '',
+    cards: []    
+})
 
+let table = new Array(5).fill({
+    suit: null,
+    rank: null
+})
 
 echo.on('connection', function (conn) {
     let currentUser = {
@@ -49,7 +74,9 @@ echo.on('connection', function (conn) {
     }
     setInterval(() => {
         const payload = {
-            users: USER_LIST
+            users: USER_LIST,
+            players: players,
+            table: table
         }
         conn.write(JSON.stringify(payload))
     }, 100)
@@ -63,30 +90,61 @@ echo.on('connection', function (conn) {
         }
         if (USER_LIST.indexOf(user) < 0) {
             USER_LIST.push(user)
-            if(!players[0]) {
-                players[0] = user
-            } else {
-                if(!players[1]) {
-                    players[1] = user
-                }
-            }
             
+        }
+        if(mess.clickOnPlace >= 0) {
+            const place = mess.clickOnPlace
+            const name = mess.user
+            const money = mess.money
+            players[place] = {
+                isEmpty: false,
+                name: name,
+                money: money,
+                cards: []    
+            }
+            console.log(players)
         }
 
 
-        if(mess.clickOnDeck >= 0) {
-            console.log('1')
+        if(mess.next) {
+            for(let i = 0; i < table.length; i++) {
+                if(!table[i].rank) {
+                    table[i] = getOneCard(curDeck)
+                    break
+                }
+            }
         }
 
         if(mess.reload) {
-            console.log('2')
-        }        
+            curDeck = createDeck(suit, rank)
+            table = new Array(5).fill({
+                suit: null,
+                rank: null
+            })
+        }
+        
+        if(mess.standing) {
+           const name = mess.user
+           const index = players.findIndex(el => el.name == name)
+           players[index] = {
+            isEmpty: true,
+            name: '',
+            money: '',
+            cards: []    
+        }
+        }
     });
 
     conn.on('close', () => {
         connection.splice(connection.indexOf(currentUser), 1) 
         if (connection.every(curr => curr.name !== currentUser.name)) {
             USER_LIST.splice(USER_LIST.indexOf(currentUser.name), 1)
+            players[players.findIndex(el => el.name == currentUser.name)] = {
+                isEmpty: true,
+                name: '',
+                money: '',
+                cards: []    
+            }
         }
     })
 });
@@ -115,10 +173,15 @@ const createDeck = (suit, rank) =>{
             })
         }
     }
-    return temp
+    return shuffle(temp)
 }
+let curDeck = createDeck(suit, rank)
+
+const getOneCard = deck => deck.shift()
+
 
 //
+
 server.listen(port, '0.0.0.0', () => {
     console.log("server is running on port: " + port)
 });

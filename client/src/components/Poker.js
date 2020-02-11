@@ -2,46 +2,10 @@ import React from 'react';
 import jwt_decode from 'jwt-decode'
 import UserList from './UserList';
 import SockJS from 'sockjs-client'
+import TableCards from './poker/TableCards';
 
-function Square(props) {
-    return (
-        <button className="square" onClick={props.onClick}>
-            {props.value}
-        </button>
-    )
-}
 
-class Board extends React.Component {
 
-    renderSquare(i) {
-        return <Square
-            value={this.props.squares[i]}
-            onClick={() => this.props.onClick(i)}
-        />;
-    }
-
-    render() {
-        return (
-            <div>
-                <div className="board-row">
-                    {this.renderSquare(0)}
-                    {this.renderSquare(1)}
-                    {this.renderSquare(2)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(3)}
-                    {this.renderSquare(4)}
-                    {this.renderSquare(5)}
-                </div>
-                <div className="board-row">
-                    {this.renderSquare(6)}
-                    {this.renderSquare(7)}
-                    {this.renderSquare(8)}
-                </div>
-            </div>
-        );
-    }
-}
 
 class Poker extends React.Component {
 
@@ -52,8 +16,11 @@ class Poker extends React.Component {
 
         this.state = {
             first_name: '',
+            money: 0,
             action: sock,
-            users: []
+            users: [],
+            players: [],
+            table: []
         };
 
         sock.onopen = () => {
@@ -67,9 +34,11 @@ class Poker extends React.Component {
 
         sock.onmessage = e => {
             let message = JSON.parse(e.data)
-            const users = message.users
+           
             this.setState({ 
-                users: users
+                users: message.users,
+                players: message.players,
+                table: message.table
             })
             
         };
@@ -85,7 +54,8 @@ class Poker extends React.Component {
         this.setState({
             first_name: decoded.first_name,
             last_name: decoded.last_name,
-            email: decoded.email
+            email: decoded.email,
+            money: decoded.money
         })
 
     }
@@ -98,15 +68,22 @@ class Poker extends React.Component {
 
         const payload = {
             user: this.state.first_name,
-            clickOnDeck: i
+            sitting: true,
+            clickOnPlace: i,
+            money: this.state.money
+        }
+        this.state.action.send(JSON.stringify(payload))
+    }
+    handleStand() {
+
+        const payload = {
+            user: this.state.first_name,
+            standing: true
         }
         this.state.action.send(JSON.stringify(payload))
     }
  
-    jumpTo() {
-        this.setState({
-            xIsNext: true,
-        });
+    restart() {
         const payload = {
             user: this.state.first_name,
             reload: true
@@ -114,22 +91,60 @@ class Poker extends React.Component {
         this.state.action.send(JSON.stringify(payload))
     }
 
+    nextStep() {
+        const payload = {
+            user: this.state.first_name,
+            next: true
+        }
+        this.state.action.send(JSON.stringify(payload))
+    }
+
     render() {
 
-        const moves = (
-                    <button onClick={() => this.jumpTo()}>Go to game start</button>
+        const reload = (
+                    <button onClick={() => this.restart()}>Restart</button>
             );        
 
+            const getCard = (
+                <button onClick={() => this.nextStep()}>Next step</button>
+        );  
         let status = 'msg';
 
+        const addButton = i => {
+            return (
+                <button className="one-place" key={i} onClick={() => this.handleClick(i)}>Присесть {i}</button>
+            )
+        }
+        const addButtons = () => {
+            console.log(this.state.players)
+            let temp = []
+            if(this.state.players.find(el => el.name == this.state.first_name)) {
+                return (
+                    <button className="stand-up" onClick={() => this.handleStand()}>Встать</button>
+                )
+            }
+            else {
+                
+                this.state.players.map((el, i) => {
+                    if(el.isEmpty) {
+                        temp.push(addButton(i))
+                    }
+                })
+                return <div>{temp}</div> 
+            }
+            
+        }
         return (
             <div className="game">
                 <div className="game-board">
                     Hello {this.state.first_name}
-                    
+                    {addButtons()}
+                    <TableCards {... this.state} />
                 </div>
                 <div className="game-info">
                     <div>{status}</div>
+                    {reload}
+                    {getCard}
                     
                 </div>
                 <UserList {... this.state} />
