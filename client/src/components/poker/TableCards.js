@@ -1,18 +1,29 @@
 import React, { Component } from 'react'
 
+
+function SingleCard1(props) {
+    const card = props.card ? props.card : {
+        suit: null,
+        rank: null
+    }
+    return (
+        <li className="element-card">
+            {card.rank} {card.suit}
+        </li>
+    )
+}
 class TableCards extends Component {
 
-    
-
     render() {
-        let card =  this.props.table ? this.props.table.map((user, i) => {
-            return <li className="element-card" key={i}>{user.rank} {user.suit}</li>
-        }) : <li></li>
         return (
             <div className="container">
                 <div className="jumbotron mt-5">
                    Table
-                  <ul> {card}
+                  <ul> 
+                      {this.props.table.map((el, i) => {
+                         return <SingleCard1 key={i} index={i} card={el} /> 
+                      })}
+                  
                   </ul>
 
                 </div>

@@ -116,16 +116,15 @@ class Poker extends React.Component {
             )
         }
         const addButtons = () => {
-            console.log(this.state.players)
             let temp = []
-            if(this.state.players.find(el => el.name == this.state.first_name)) {
+            if(this.state.players.find(el => el.name === this.state.first_name)) {
                 return (
                     <button className="stand-up" onClick={() => this.handleStand()}>Встать</button>
                 )
             }
             else {
                 
-                this.state.players.map((el, i) => {
+                this.state.players.forEach((el, i) => {
                     if(el.isEmpty) {
                         temp.push(addButton(i))
                     }
